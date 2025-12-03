@@ -1,4 +1,4 @@
-import express from 'express';
+const express = require('express');
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import sessionRoutes from './src/routes/api.js';
+const apiRoutes = require('./src/routes/api');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
