@@ -1,54 +1,83 @@
 import express from 'express';
-import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { generateSession, getSessionStatus, deleteSession } from './routes/api.js';
-import { cleanupSessions } from './utils/cleanup.js';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+import sessionRoutes from './src/routes/api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+dotenv.config();
 
-// Middleware
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "ws:", "wss:"]
+        }
+    }
+}));
+
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Create sessions directory
-if (!fs.existsSync('./sessions')) {
-    fs.mkdirSync('./sessions');
-}
-
 // Routes
-app.use('/api', (await import('./routes/api.js')).default);
+app.use('/api', sessionRoutes);
 
-// Serve frontend
+// Serve HTML
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+// Socket.IO for real-time updates
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+    
+    socket.on('generate-session', async (data) => {
+        // Handle session generation in real-time
+        socket.emit('generating', { status: 'Generating session...' });
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`
-╔══════════════════════════════════════════╗
-║      ＡＢＤＵＬＬＡＨ ＳＥＳＳＩＯＮ      ║
-║         ＧＥＮＥＲＡＴＯＲ Ｖ１．０      ║
-╚══════════════════════════════════════════╝
-    
-🌐 Server running: http://localhost:${PORT}
-🔗 API Endpoint: http://localhost:${PORT}/api/generate
-📱 Use: http://localhost:${PORT}/api/generate?number=923288055104
-    `);
-    
-    // Cleanup old sessions every hour
-    setInterval(cleanupSessions, 3600000);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Visit: http://localhost:${PORT}`);
 });
