@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abdullah-MD • Session Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/1384/1384023.png">
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="background-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Abdullah-MD</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#home" class="nav-link active"><i class="fas fa-home"></i> Home</a>
+                    <a href="#generate" class="nav-link"><i class="fas fa-key"></i> Generate</a>
+                    <a href="#features" class="nav-link"><i class="fas fa-star"></i> Features</a>
+                    <a href="#about" class="nav-link"><i class="fas fa-info-circle"></i> About</a>
+                </div>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title animate-float">
+                        <span class="gradient-text">Generate WhatsApp</span>
+                        <span class="gradient-text">Session ID Instantly</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Get real 8-digit pairing codes for <strong>Abdullah-MD</strong> bot.
+                        No QR codes, direct pairing with your number.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <i class="fas fa-bolt"></i>
+                            <span>Instant Generation</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>100% Secure</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-infinity"></i>
+                            <span>Unlimited Sessions</span>
+                        </div>
+                    </div>
+                    <a href="#generate" class="cta-button pulse">
+                        <i class="fas fa-rocket"></i>
+                        Generate Session
+                    </a>
+                </div>
+                <div class="hero-image">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="whatsapp-screen">
+                                <div class="whatsapp-header">
+                                    <i class="fab fa-whatsapp"></i>
+                                    <span>WhatsApp Web</span>
+                                </div>
+                                <div class="whatsapp-content">
+                                    <div class="pairing-code-display">
+                                        <div class="code-digit">8</div>
+                                        <div class="code-digit">A</div>
+                                        <div class="code-digit">B</div>
+                                        <div class="code-digit">D</div>
+                                        <div class="code-digit">U</div>
+                                        <div class="code-digit">L</div>
+                                        <div class="code-digit">L</div>
+                                        <div class="code-digit">H</div>
+                                    </div>
+                                    <p class="pairing-text">Enter this code in WhatsApp</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Generate Section -->
+    <section class="generate-section" id="generate">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Generate Your Session</h2>
+                <p class="section-subtitle">Enter your WhatsApp number to get a real pairing code</p>
+            </div>
+            
+            <div class="generator-card">
+                <div class="generator-tabs">
+                    <button class="tab-btn active" data-tab="pairing">
+                        <i class="fas fa-mobile-alt"></i> Phone Pairing
+                    </button>
+                    <button class="tab-btn" data-tab="session">
+                        <i class="fas fa-key"></i> Session ID
+                    </button>
+                </div>
+                
+                <div class="tab-content active" id="pairing-tab">
+                    <form id="pairingForm" class="generator-form">
+                        <div class="form-group">
+                            <label for="phoneNumber">
+                                <i class="fas fa-phone"></i> WhatsApp Number
+                            </label>
+                            <div class="input-with-flag">
+                                <div class="country-code">
+                                    <i class="fas fa-flag"></i>
+                                    <select id="countryCode">
+                                        <option value="92">🇵🇰 +92</option>
+                                        <option value="1">🇺🇸 +1</option>
+                                        <option value="91">🇮🇳 +91</option>
+                                        <option value="44">🇬🇧 +44</option>
+                                        <option value="971">🇦🇪 +971</option>
+                                    </select>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    id="phoneNumber" 
+                                    placeholder="Enter your WhatsApp number"
+                                    required
+                                    pattern="[0-9]{10,}"
+                                >
+                            </div>
+                            <small class="form-help">Enter without country code (e.g., 3288055104)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="botName">
+                                <i class="fas fa-robot"></i> Bot Name
+                            </label>
+                            <input 
+                                type="text" 
+                                id="botName" 
+                                value="Abdullah-MD"
+                                readonly
+                                class="readonly-input"
+                            >
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="generate-btn" id="generateBtn">
+                                <i class="fas fa-bolt"></i>
+                                <span>Generate Pairing Code</span>
+                                <div class="loading-spinner hidden"></div>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> Instructions:</h4>
+                        <ol>
+                            <li>Enter your WhatsApp number above</li>
+                            <li>Click "Generate Pairing Code"</li>
+                            <li>Get your 8-digit code</li>
+                            <li>Go to WhatsApp → Settings → Linked Devices</li>
+                            <li>Tap "Link a Device" and enter the code</li>
+                            <li>Your session will be generated automatically</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="session-tab">
+                    <div class="session-display">
+                        <div class="session-header">
+                            <i class="fas fa-key"></i>
+                            <h3>Your Session ID</h3>
+                        </div>
+                        <div class="session-code" id="sessionCodeDisplay">
+                            <div class="code-placeholder">
+                                <i class="fas fa-lock"></i>
+                                <span>Generate a pairing code first</span>
+                            </div>
+                        </div>
+                        <div class="session-actions">
+                            <button class="action-btn" id="copySessionBtn" disabled>
+                                <i class="fas fa-copy"></i> Copy Session ID
+                            </button>
+                            <button class="action-btn" id="downloadSessionBtn" disabled>
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="action-btn" id="testSessionBtn" disabled>
+                                <i class="fas fa-test"></i> Test Connection
+                            </button>
+                        </div>
+                        <div class="session-info">
+                            <p><i class="fas fa-shield-alt"></i> Your session is encrypted and secure</p>
+                            <p><i class="fas fa-clock"></i> Valid for 30 days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-card hidden" id="resultCard">
+                <div class="result-header success">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Pairing Code Generated!</h3>
+                </div>
+                <div class="result-body">
+                    <div class="pairing-code-display-large">
+                        <div class="code-digit-large" id="codeDigit1">?</div>
+                        <div class="code-digit-large" id="codeDigit2">?</div>
+                        <div class="code-digit-large" id="codeDigit3">?</div>
+                        <div class="code-digit-large" id="codeDigit4">?</div>
+                        <div class="code-digit-large" id="codeDigit5">?</div>
+                        <div class="code-digit-large" id="codeDigit6">?</div>
+                        <div class="code-digit-large" id="codeDigit7">?</div>
+                        <div class="code-digit-large" id="codeDigit8">?</div>
+                    </div>
+                    <p class="code-validity">Valid for <span class="countdown" id="countdown">05:00</span></p>
+                    
+                    <div class="whatsapp-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <p>Open WhatsApp on your phone</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <p>Go to <strong>Settings → Linked Devices</strong></p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <p>Tap <strong>"Link a Device"</strong></p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <p>Enter the code above</p>
+                        </div>
+                    </div>
+                    
+                    <div class="result-actions">
+                        <button class="result-btn primary" id="copyCodeBtn">
+                            <i class="fas fa-copy"></i> Copy Code
+                        </button>
+                        <button class="result-btn" id="newCodeBtn">
+                            <i class="fas fa-redo"></i> Generate New
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose Our Generator?</h2>
+                <p class="section-subtitle">Premium features for the best experience</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Generation</h3>
+                    <p>Get your pairing code in seconds. No waiting, no delays.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Military Security</h3>
+                    <p>End-to-end encryption. Your data never leaves your browser.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>Unlimited Sessions</h3>
+                    <p>Generate as many sessions as you need. No limits.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>No QR Codes</h3>
+                    <p>Direct pairing with 8-digit codes. Works on all devices.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Abdullah-MD Ready</h3>
+                    <p>Perfectly optimized for Abdullah-MD WhatsApp bot.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Get help anytime through our dedicated support channel.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="about">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Abdullah-MD</span>
+                    </div>
+                    <p class="footer-description">
+                        Premium WhatsApp Session Generator for Abdullah-MD bot.
+                        Fast, secure, and reliable.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <a href="#home"><i class="fas fa-chevron-right"></i> Home</a>
+                    <a href="#generate"><i class="fas fa-chevron-right"></i> Generator</a>
+                    <a href="#features"><i class="fas fa-chevron-right"></i> Features</a>
+                    <a href="#"><i class="fas fa-chevron-right"></i> Documentation</a>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="#"><i class="fas fa-chevron-right"></i> Help Center</a>
+                    <a href="#"><i class="fas fa-chevron-right"></i> FAQ</a>
+                    <a href="#"><i class="fas fa-chevron-right"></i> Contact Us</a>
+                    <a href="#"><i class="fas fa-chevron-right"></i> Report Issue</a>
+                </div>
+                
+                <div class="footer-contact">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-user"></i> Owner: Abdullah</p>
+                    <p><i class="fas fa-phone"></i> Number: +923288055104</p>
+                    <p><i class="fas fa-envelope"></i> Email: support@abdullah-md.com</p>
+                    <p><i class="fas fa-globe"></i> Website: abdullah-md.com</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Abdullah-MD Session Generator. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
