@@ -1,83 +1,166 @@
 const express = require('express');
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import dotenv from 'dotenv';
-import rateLimit from 'express-rate-limit';
-const apiRoutes = require('./src/routes/api');
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config();
+const path = require('path');
+const session = require('express-session');
+const crypto = require('crypto');
 
 const app = express();
-const server = createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
+const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "ws:", "wss:"]
-        }
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '.')));
+
+// Session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'abdullah-md-secret-key-2023',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
 
-app.use(compression());
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
+// In-memory storage for demo (use database in production)
+const sessionsStore = new Map();
 
 // Routes
-app.use('/api', sessionRoutes);
-
-// Serve HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Socket.IO for real-time updates
-io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-    
-    socket.on('generate-session', async (data) => {
-        // Handle session generation in real-time
-        socket.emit('generating', { status: 'Generating session...' });
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
-    });
+// API to generate session
+app.post('/api/generate-session', (req, res) => {
+    try {
+        const { sessionName, sessionType, security } = req.body;
+        
+        // Generate session ID
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        
+        // Generate pair code
+        const pairCode = generateFormattedPairCode();
+        
+        // Create session object
+        const sessionData = {
+            id: sessionId,
+            name: sessionName || 'abdullah-md-session',
+            type: sessionType || 'whatsapp',
+            security: security || 'high',
+            pairCode: pairCode,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            status: 'active'
+        };
+        
+        // Store session
+        sessionsStore.set(sessionId, sessionData);
+        
+        // Limit store size
+        if (sessionsStore.size > 100) {
+            const firstKey = sessionsStore.keys().next().value;
+            sessionsStore.delete(firstKey);
+        }
+        
+        res.json({
+            success: true,
+            session: sessionData
+        });
+    } catch (error) {
+        console.error('Error generating session:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate session'
+        });
+    }
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Visit: http://localhost:${PORT}`);
+// API to validate pair code
+app.post('/api/validate-pair', (req, res) => {
+    try {
+        const { pairCode } = req.body;
+        
+        if (!pairCode) {
+            return res.json({
+                success: false,
+                message: 'Pair code is required'
+            });
+        }
+        
+        // Find session by pair code
+        let sessionData = null;
+        for (const [id, session] of sessionsStore.entries()) {
+            if (session.pairCode === pairCode) {
+                sessionData = session;
+                break;
+            }
+        }
+        
+        if (sessionData) {
+            // Check if session is expired
+            if (new Date(sessionData.expiresAt) < new Date()) {
+                return res.json({
+                    success: false,
+                    message: 'Session has expired'
+                });
+            }
+            
+            return res.json({
+                success: true,
+                session: sessionData
+            });
+        } else {
+            return res.json({
+                success: false,
+                message: 'Invalid pair code'
+            });
+        }
+    } catch (error) {
+        console.error('Error validating pair code:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to validate pair code'
+        });
+    }
+});
+
+// API to get recent sessions
+app.get('/api/recent-sessions', (req, res) => {
+    try {
+        const sessions = Array.from(sessionsStore.values())
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 10);
+        
+        res.json({
+            success: true,
+            sessions: sessions
+        });
+    } catch (error) {
+        console.error('Error getting recent sessions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get recent sessions'
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Helper function to generate formatted pair code
+function generateFormattedPairCode() {
+    const part1 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const part2 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const part3 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const part4 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    
+    return `${part1}-${part2}-${part3}-${part4}`;
+}
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Open http://localhost:${PORT} in your browser`);
 });
