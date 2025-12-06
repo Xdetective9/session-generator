@@ -1,56 +1,284 @@
-// Theme Toggle
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = themeToggle.querySelector('i');
+// DOM Elements
+const generateBtn = document.getElementById('generateBtn');
+const resetBtn = document.getElementById('resetBtn');
+const pairBtn = document.getElementById('pairBtn');
+const validatePairBtn = document.getElementById('validatePairCode');
+const clearPairBtn = document.getElementById('clearPairBtn');
+const copySessionIdBtn = document.getElementById('copySessionId');
+const copyPairCodeBtn = document.getElementById('copyPairCode');
+const sessionNameInput = document.getElementById('sessionName');
+const sessionTypeSelect = document.getElementById('sessionType');
+const pairCodeInput = document.getElementById('pairCodeInput');
+const resultPlaceholder = document.getElementById('resultPlaceholder');
+const resultDisplay = document.getElementById('resultDisplay');
+const sessionIdDisplay = document.getElementById('sessionIdDisplay');
+const pairCodeDisplay = document.getElementById('pairCodeDisplay');
+const expiryDisplay = document.getElementById('expiryDisplay');
+const createdAtDisplay = document.getElementById('createdAtDisplay');
+const pairStatus = document.getElementById('pairStatus');
+const sessionsList = document.getElementById('sessionsList');
+const toast = document.getElementById('toast');
 
-themeToggle.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+// Sample sessions for demo
+let generatedSessions = JSON.parse(localStorage.getItem('abdullah-md-sessions')) || [];
+let currentSession = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentSessions();
     
-    document.documentElement.setAttribute('data-theme', newTheme);
-    themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-    
-    localStorage.setItem('theme', newTheme);
-    showToast('Theme changed to ' + newTheme + ' mode');
+    // Generate a sample session on load for demo
+    setTimeout(() => {
+        generateSession(true);
+    }, 1000);
 });
 
-// Load saved theme
-const savedTheme = localStorage.getItem('theme') || 'dark';
-document.documentElement.setAttribute('data-theme', savedTheme);
-themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+// Generate Session ID
+generateBtn.addEventListener('click', function() {
+    generateSession();
+});
 
-// Tab Switching
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
+// Reset Form
+resetBtn.addEventListener('click', function() {
+    sessionNameInput.value = 'abdullah-md-session';
+    sessionTypeSelect.value = 'whatsapp';
+    document.querySelector('input[name="security"][value="high"]').checked = true;
+    
+    resultDisplay.style.display = 'none';
+    resultPlaceholder.style.display = 'block';
+    
+    showToast('Form reset successfully', 'success');
+});
 
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tabId = btn.getAttribute('data-tab');
+// Generate Session Function
+function generateSession(isInitial = false) {
+    const sessionName = sessionNameInput.value.trim() || 'abdullah-md-session';
+    const sessionType = sessionTypeSelect.value;
+    const security = document.querySelector('input[name="security"]:checked').value;
+    
+    // Generate session ID (32 chars)
+    const sessionId = generateSecureId(32);
+    
+    // Generate pair code (16 chars, formatted)
+    const pairCode = generatePairCode();
+    
+    // Set expiry (24 hours from now)
+    const now = new Date();
+    const expiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
+    // Format dates
+    const formattedCreatedAt = formatDate(now);
+    const formattedExpiry = formatDate(expiry);
+    
+    // Create session object
+    currentSession = {
+        id: sessionId,
+        name: sessionName,
+        type: sessionType,
+        security: security,
+        pairCode: pairCode,
+        createdAt: now.toISOString(),
+        expiresAt: expiry.toISOString(),
+        status: 'active'
+    };
+    
+    // Update UI
+    sessionIdDisplay.textContent = sessionId;
+    pairCodeDisplay.textContent = pairCode;
+    createdAtDisplay.textContent = formattedCreatedAt;
+    expiryDisplay.textContent = '24 hours';
+    
+    // Show results
+    resultPlaceholder.style.display = 'none';
+    resultDisplay.style.display = 'block';
+    
+    // Add to sessions list if not initial demo
+    if (!isInitial) {
+        generatedSessions.unshift(currentSession);
+        if (generatedSessions.length > 5) {
+            generatedSessions = generatedSessions.slice(0, 5);
+        }
+        localStorage.setItem('abdullah-md-sessions', JSON.stringify(generatedSessions));
+        loadRecentSessions();
         
-        // Update active tab button
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // Show corresponding content
-        tabContents.forEach(content => {
-            content.classList.remove('active');
-            if (content.id === `${tabId}-tab`) {
-                content.classList.add('active');
-            }
-        });
+        showToast('Session generated successfully!', 'success');
+    }
+}
+
+// Generate Secure ID
+function generateSecureId(length) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const cryptoArray = new Uint8Array(length);
+    crypto.getRandomValues(cryptoArray);
+    
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars[cryptoArray[i] % chars.length];
+    }
+    
+    return result;
+}
+
+// Generate Pair Code (formatted)
+function generatePairCode() {
+    const part1 = generateSecureId(4).toUpperCase();
+    const part2 = generateSecureId(4).toUpperCase();
+    const part3 = generateSecureId(4).toUpperCase();
+    const part4 = generateSecureId(4).toUpperCase();
+    
+    return `${part1}-${part2}-${part3}-${part4}`;
+}
+
+// Format Date
+function formatDate(date) {
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
     });
+}
+
+// Copy to Clipboard Functions
+copySessionIdBtn.addEventListener('click', function() {
+    copyToClipboard(currentSession.id);
+    showToast('Session ID copied to clipboard!', 'success');
 });
 
-// Toast Notification
+copyPairCodeBtn.addEventListener('click', function() {
+    copyToClipboard(currentSession.pairCode);
+    showToast('Pair code copied to clipboard!', 'success');
+});
+
+function copyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+}
+
+// Validate Pair Code
+validatePairBtn.addEventListener('click', function() {
+    const pairCode = pairCodeInput.value.trim().toUpperCase();
+    
+    if (!pairCode) {
+        showPairStatus('Please enter a pair code', 'error');
+        return;
+    }
+    
+    // Validate format (XXXX-XXXX-XXXX-XXXX)
+    const pairCodeRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    
+    if (!pairCodeRegex.test(pairCode)) {
+        showPairStatus('Invalid pair code format. Use: XXXX-XXXX-XXXX-XXXX', 'error');
+        pairBtn.disabled = true;
+        return;
+    }
+    
+    // Check if pair code exists in sessions
+    const sessionExists = generatedSessions.some(session => 
+        session.pairCode === pairCode
+    );
+    
+    if (sessionExists || Math.random() > 0.3) { // 70% chance of success for demo
+        showPairStatus('Pair code validated successfully! You can now pair your device.', 'success');
+        pairBtn.disabled = false;
+    } else {
+        showPairStatus('Invalid pair code. Please check and try again.', 'error');
+        pairBtn.disabled = true;
+    }
+});
+
+// Pair Device
+pairBtn.addEventListener('click', function() {
+    const pairCode = pairCodeInput.value.trim().toUpperCase();
+    
+    showPairStatus(`Device paired successfully using code: ${pairCode}`, 'success');
+    
+    // Simulate pairing process
+    setTimeout(() => {
+        showToast('Device paired successfully! Session is now active.', 'success');
+        
+        // Reset
+        pairCodeInput.value = '';
+        pairBtn.disabled = true;
+        pairStatus.className = 'status-message';
+        pairStatus.style.display = 'none';
+    }, 1000);
+});
+
+// Clear Pair Input
+clearPairBtn.addEventListener('click', function() {
+    pairCodeInput.value = '';
+    pairBtn.disabled = true;
+    pairStatus.className = 'status-message';
+    pairStatus.style.display = 'none';
+    showToast('Pair code input cleared', 'info');
+});
+
+// Show Pair Status
+function showPairStatus(message, type) {
+    pairStatus.textContent = message;
+    pairStatus.className = `status-message ${type}`;
+    pairStatus.style.display = 'block';
+}
+
+// Load Recent Sessions
+function loadRecentSessions() {
+    sessionsList.innerHTML = '';
+    
+    if (generatedSessions.length === 0) {
+        sessionsList.innerHTML = `
+            <div class="session-item">
+                <div class="session-info">
+                    <h4>No recent sessions</h4>
+                    <p>Generate a session to see it here</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    generatedSessions.forEach(session => {
+        const sessionItem = document.createElement('div');
+        sessionItem.className = 'session-item';
+        
+        const formattedDate = formatDate(new Date(session.createdAt));
+        
+        sessionItem.innerHTML = `
+            <div class="session-info">
+                <h4>${session.name}</h4>
+                <p>${formattedDate} • ${session.type}</p>
+            </div>
+            <div class="session-status">${session.status}</div>
+        `;
+        
+        sessionsList.appendChild(sessionItem);
+    });
+}
+
+// Show Toast Notification
 function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
     const toastIcon = toast.querySelector('.toast-icon');
     const toastMessage = toast.querySelector('.toast-message');
     
-    toastIcon.className = type === 'success' ? 'fas fa-check-circle toast-icon' : 
-                         type === 'error' ? 'fas fa-exclamation-circle toast-icon' : 
-                         'fas fa-info-circle toast-icon';
-    
     toastMessage.textContent = message;
+    
+    if (type === 'success') {
+        toast.style.background = 'linear-gradient(to right, #10b981, #34d399)';
+        toastIcon.className = 'fas fa-check-circle toast-icon';
+    } else if (type === 'error') {
+        toast.style.background = 'linear-gradient(to right, #ef4444, #f87171)';
+        toastIcon.className = 'fas fa-exclamation-circle toast-icon';
+    } else {
+        toast.style.background = 'linear-gradient(to right, #6b7280, #9ca3af)';
+        toastIcon.className = 'fas fa-info-circle toast-icon';
+    }
+    
     toast.classList.add('show');
     
     setTimeout(() => {
@@ -58,237 +286,45 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// Generate Pairing Code
-const pairingForm = document.getElementById('pairingForm');
-const generateBtn = document.getElementById('generateBtn');
-const loadingSpinner = generateBtn.querySelector('.loading-spinner');
-const generateBtnText = generateBtn.querySelector('span');
-const resultCard = document.getElementById('resultCard');
-const codeDigits = Array.from({length: 8}, (_, i) => document.getElementById(`codeDigit${i + 1}`));
-const countdownElement = document.getElementById('countdown');
-const copyCodeBtn = document.getElementById('copyCodeBtn');
-const newCodeBtn = document.getElementById('newCodeBtn');
-
-// Session display elements
-const sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
-const copySessionBtn = document.getElementById('copySessionBtn');
-const downloadSessionBtn = document.getElementById('downloadSessionBtn');
-const testSessionBtn = document.getElementById('testSessionBtn');
-
-let countdownInterval;
-let currentSessionId = '';
-
-// Generate random 8-digit code
-function generateRandomCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar characters
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
-// Start countdown timer
-function startCountdown(duration = 300) { // 5 minutes
-    let timeLeft = duration;
-    
-    clearInterval(countdownInterval);
-    countdownInterval = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            showToast('Pairing code expired! Generate a new one.', 'error');
-        }
-        
-        timeLeft--;
-    }, 1000);
-}
-
-// Show result card
-function showResult(code) {
-    // Display code digits
-    for (let i = 0; i < 8; i++) {
-        codeDigits[i].textContent = code[i];
-        codeDigits[i].style.animationDelay = `${i * 0.1}s`;
-    }
-    
-    // Start countdown
-    startCountdown(300);
-    
-    // Show result card
-    resultCard.classList.remove('hidden');
-    resultCard.scrollIntoView({ behavior: 'smooth' });
-    
-    // Generate session ID
-    generateSessionId(code);
-}
-
-// Generate Session ID
-async function generateSessionId(pairingCode) {
-    try {
-        // In production, this would call your backend API
-        // For demo, we'll generate a fake session ID
-        const sessionId = btoa(`${Date.now()}-${pairingCode}-${Math.random().toString(36).substr(2, 9)}`);
-        currentSessionId = sessionId;
-        
-        // Display session ID
-        sessionCodeDisplay.innerHTML = `
-            <div class="session-id">
-                <code>${sessionId}</code>
-            </div>
-        `;
-        
-        // Enable session buttons
-        copySessionBtn.disabled = false;
-        downloadSessionBtn.disabled = false;
-        testSessionBtn.disabled = false;
-        
-        // Switch to session tab
-        document.querySelector('[data-tab="session"]').click();
-        
-        // Show success message
-        showToast('Session ID generated successfully!');
-        
-    } catch (error) {
-        console.error('Session generation failed:', error);
-        showToast('Failed to generate session. Please try again.', 'error');
-    }
-}
-
-// Form submission
-pairingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const phoneNumber = document.getElementById('phoneNumber').value;
-    const countryCode = document.getElementById('countryCode').value;
-    const fullNumber = countryCode + phoneNumber;
-    
-    // Validate phone number
-    if (!phoneNumber || phoneNumber.length < 10) {
-        showToast('Please enter a valid phone number (at least 10 digits)', 'error');
-        return;
-    }
-    
-    // Show loading state
-    generateBtn.disabled = true;
-    generateBtnText.textContent = 'Generating...';
-    loadingSpinner.classList.remove('hidden');
-    
-    try {
-        // In production, this would call your backend API
-        // For now, simulate API call with delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Generate code
-        const pairingCode = generateRandomCode();
-        
-        // Show result
-        showResult(pairingCode);
-        
-        // Show success message
-        showToast('Pairing code generated! Check the result below.');
-        
-    } catch (error) {
-        console.error('Generation failed:', error);
-        showToast('Failed to generate code. Please try again.', 'error');
-    } finally {
-        // Reset button state
-        generateBtn.disabled = false;
-        generateBtnText.textContent = 'Generate Pairing Code';
-        loadingSpinner.classList.add('hidden');
-    }
-});
-
-// Copy code button
-copyCodeBtn.addEventListener('click', () => {
-    const code = Array.from(codeDigits).map(digit => digit.textContent).join('');
-    navigator.clipboard.writeText(code).then(() => {
-        showToast('Pairing code copied to clipboard!');
-    });
-});
-
-// New code button
-newCodeBtn.addEventListener('click', () => {
-    resultCard.classList.add('hidden');
-    pairingForm.reset();
-    clearInterval(countdownInterval);
-});
-
-// Copy session ID
-copySessionBtn.addEventListener('click', () => {
-    if (currentSessionId) {
-        navigator.clipboard.writeText(currentSessionId).then(() => {
-            showToast('Session ID copied to clipboard!');
-        });
-    }
-});
-
-// Download session
-downloadSessionBtn.addEventListener('click', () => {
-    if (currentSessionId) {
-        const blob = new Blob([currentSessionId], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `abdullah-md-session-${Date.now()}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('Session downloaded!');
-    }
-});
-
-// Test session
-testSessionBtn.addEventListener('click', async () => {
-    try {
-        // Simulate testing the session
-        showToast('Testing session connection...', 'info');
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Simulate success
-        showToast('Session is valid and ready to use!');
-        
-    } catch (error) {
-        showToast('Session test failed. Please generate a new one.', 'error');
-    }
-});
-
-// Smooth scrolling for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + G to generate session
+    if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
         e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-            window.scrollTo({
-                top: targetElement.offsetTop - 80,
-                behavior: 'smooth'
-            });
-        }
-    });
-});
-
-// Initialize with some animations
-document.addEventListener('DOMContentLoaded', () => {
-    // Add animation to feature cards
-    const featureCards = document.querySelectorAll('.feature-card');
-    featureCards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-    });
-    
-    // Check for URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('number')) {
-        document.getElementById('phoneNumber').value = urlParams.get('number');
+        generateBtn.click();
     }
     
-    console.log('✨ Abdullah-MD Session Generator loaded successfully!');
+    // Ctrl/Cmd + R to reset
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        resetBtn.click();
+    }
+    
+    // Escape to clear pair input
+    if (e.key === 'Escape') {
+        pairCodeInput.value = '';
+    }
+});
+
+// Input validation for pair code
+pairCodeInput.addEventListener('input', function() {
+    // Auto-format as XXXX-XXXX-XXXX-XXXX
+    let value = this.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    
+    if (value.length > 16) {
+        value = value.substring(0, 16);
+    }
+    
+    // Add hyphens
+    if (value.length > 12) {
+        value = value.substring(0, 12) + '-' + value.substring(12);
+    }
+    if (value.length > 8) {
+        value = value.substring(0, 8) + '-' + value.substring(8);
+    }
+    if (value.length > 4) {
+        value = value.substring(0, 4) + '-' + value.substring(4);
+    }
+    
+    this.value = value;
 });
